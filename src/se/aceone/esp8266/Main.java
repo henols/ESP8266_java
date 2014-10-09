@@ -31,13 +31,14 @@ public class Main {
 //				module.reset();
 				module.version();
 //				module.query(Module.AT_CIPMUX);
-				module.connectToAP("c64", "feelgood", 5);
-				module.getListAPs();
+				module.connectToAP("C64", "feelgood", 5);
+//				module.getListAPs();
 				module.query(Module.AT_CWJAP);
 				module.getIPAddress();
 //				module.connectTCP("220.181.111.85", 80);
 				module.connectTCP("aceone.se", 80);
-				
+				module.getIPAddress();
+				System.out.println("--------------");
 				
 			}
 		} catch (Exception e) {

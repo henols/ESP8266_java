@@ -469,6 +469,7 @@ public class Module {
 		cmd += "\"," + destPort;
 		write(cmd);
 		System.out.println(read());
+		System.out.println(read());
 
 		// sockaddr socketAddress;
 		// int32_t tcpid;
