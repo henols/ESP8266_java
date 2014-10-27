@@ -1,199 +1,137 @@
 package se.aceone.esp8266;
 
+import java.io.IOException;
+
 public class Client {
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
-	/**********************************************************************/
-
+	private static final String AT_CIPCLOSE = "AT+CIPCLOSE";
+	private static final String SEND_DATA = ">";
+	private static final String SEND_OK = "SEND OK";
+	private static final String AT_CIPSEND = "AT+CIPSEND";
+	private static final int BUFFER_SIZE = 128;
+	
+	
 	private int id;
-	private Module esp8266;
+	private Module module;
+	private boolean connected = false;
+
+	int[] buffer = new int[BUFFER_SIZE];
+	private int writePos;
+	private int readPos;
+
 	Client() {
 		id = -1;
 	}
 
-	Client(Module esp8266, int id) {
-		this.esp8266 = esp8266;
+	Client(Module module, int id) {
+		this.module = module;
 		this.id = id;
-
-	//  id = s;
-	//  bufsiz = 0;
-	//  _rx_buf_idx = 0;
+		connected = true;
 	}
 
+	boolean connected() throws IOException {
+		if(id < 0){
+			return false;
+		}
+		module.checkConnectionStatus();
+		return connected;
 
+	}
 
-	int connect(String destIP, int destPort) {
-	//  bufsiz = 0;
-	//  _rx_buf_idx = 0;
-	//  sockaddr      socketAddress;
-	//  int32_t       tcpid;
-	//
-	//  // Create the socket(s)
-	//  //if (CC3KPrinter != 0) CC3KPrinter->print(F("Creating socket ... "));
-	//  tcpid = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	//  if (-1 == tcpid)
-	//  {
-//	    CHECK_PRINTER {
-//	      CC3KPrinter->println(F("Failed to open socket"));
-//	    }
-//	    return 0;
-	//  }
-	//  //CC3KPrinter->print(F("DONE (socket ")); CC3KPrinter->print(tcpid); CC3KPrinter->println(F(")"));
-	//
-	//  // Try to open the socket
-	//  memset(&socketAddress, 0x00, sizeof(socketAddress));
-	//  socketAddress.sa_family = AF_INET;
-	//  socketAddress.sa_data[0] = (destPort & 0xFF00) >> 8;  // Set the Port Number
-	//  socketAddress.sa_data[1] = (destPort & 0x00FF);
-	//  socketAddress.sa_data[2] = destIP >> 24;
-	//  socketAddress.sa_data[3] = destIP >> 16;
-	//  socketAddress.sa_data[4] = destIP >> 8;
-	//  socketAddress.sa_data[5] = destIP;
-	//
-	//  CHECK_PRINTER {
-//	    CC3KPrinter->print(F("\n\rConnect to "));
-//	    CC3KPrinter->print(destIP);
-//	    CC3KPrinter->print(':');
-//	    CC3KPrinter->println(destPort);
-	//  }
-	//
-	//  //printHex((byte *)&socketAddress, sizeof(socketAddress));
-	//  //if (CC3KPrinter != 0) CC3KPrinter->print(F("Connecting socket ... "));
-	//  if (-1 == ::connect(tcpid, &socketAddress, sizeof(socketAddress)))
-	//  {
-//	    CHECK_PRINTER {
-//	      CC3KPrinter->println(F("Connection error"));
-//	    }
-//	    closesocket(tcpid);
-//	    return 0;
-	//  }
-	//  // if (CC3KPrinter != 0) CC3KPrinter->println(F("DONE"));
-	//
-	//  id = tcpid;
-	//  return 1;
+	int write(char[] buf, int len) throws IOException {
+		if (!connected()) {
+			return -1;
+		}
+		// return write(buf, len, 0);
+
+		module.write(AT_CIPSEND + "=" + id + "," + (len+1));
+		int s = module.read(module.buf, new String[] { SEND_DATA });
+		System.out.println("---------- "+s);
+		module.debugPrint(buf, s);
+		module.write(new String(buf, 0, len));
+		s = module.read(module.buf, new String[] { SEND_OK });
+		System.out.println(s);
+		return len;
+	}
+
+	int write(char c) throws IOException {
+		if (!connected()) {
+			return -1;
+		}
 		return 0;
 	}
 
-	int connected() {
-	//  if (id < 0) return false;
-	//
-	//  if (! available() && closedids[id] == true) {
-//	    //if (CC3KPrinter != 0) CC3KPrinter->println("No more data, and closed!");
-//	    closesocket(id);
-//	    closedids[id] = false;
-//	    id = -1;
-//	    return false;
-	//  }
-	//
-	//  else return true;
+	int read(char[] buf, int len) throws IOException {
+		if (!connected()) {
+			return -1;
+		}
+		// return read(buf, len, 0);
 		return 0;
 
 	}
 
-	int write(char[] buf, int len) {
-	//  return write(buf, len, 0);
-		return 0;
-
-	}
-
-	int write(char c) {
-	//  int32_t r;
-	//  r = send(id, &c, 1, 0);
-	//  if ( r < 0 ) return 0;
-	//  return r;
+	int close() throws IOException {
+		module.write(AT_CIPCLOSE + "=" + id);
+		System.out.println(module.read(module.buf,new String[] { Module.OK }));
+		connected = false;
 		return 0;
 	}
 
-	int read(char[] buf, int len) {
-	//  return read(buf, len, 0);
-		return 0;
-
-	}
-
-	int close() {
-	//  int32_t x = closesocket(id);
-	//  id = -1;
-	//  return x;
-		return 0;
-	}
-
-	void stop() {
+	void stop() throws IOException {
 		close();
 	}
 
-	int read() {
-	//  while ((bufsiz <= 0) || (bufsiz == _rx_buf_idx)) {
-//	    cc3k_int_poll();
-//	    // buffer in some more data
-//	    bufsiz = recv(id, _rx_buf, sizeof(_rx_buf), 0);
-//	    if (bufsiz == -57) {
-//	      close();
-//	      return 0;
-//	    }
-//	    //if (CC3KPrinter != 0) { CC3KPrinter->println("Read "); CC3KPrinter->print(bufsiz); CC3KPrinter->println(" bytes"); }
-//	    _rx_buf_idx = 0;
-	//  }
-	//  uint8_t ret = _rx_buf[_rx_buf_idx];
-	//  _rx_buf_idx++;
-	//  //if (CC3KPrinter != 0) { CC3KPrinter->print("("); CC3KPrinter->write(ret); CC3KPrinter->print(")"); }
-	//  return ret;
-		return 0;
+	int read() throws IOException {
+		if (!connected) {
+			// if(!connected()){
+			return -1;
+		}
+
+		return buffer[readPos++];
 	}
 
-	int available() {
-		// not open!
-	//  if (id < 0) return 0;
-	//
-	//  if ((bufsiz > 0) // we have some data in the internal buffer
-//	      && (_rx_buf_idx < bufsiz)) {  // we havent already spit it all out
-//	    return (bufsiz - _rx_buf_idx);
-	//  }
-	//
-	//  // do a select() call on this socket
-	//  timeval timeout;
-	//  fd_set fd_read;
-	//
-	//  memset(&fd_read, 0, sizeof(fd_read));
-	//  FD_SET(id, &fd_read);
-	//
-	//  timeout.tv_sec = 0;
-	//  timeout.tv_usec = 5000; // 5 millisec
-	//
-	//  int16_t s = select(id+1, &fd_read, NULL, NULL, &timeout);
-	//  //if (CC3KPrinter != 0) } CC3KPrinter->print(F("Select: ")); CC3KPrinter->println(s); }
-	//  if (s == 1) return 1;  // some data is available to read
-	//  else return 0;  // no data is available
-		return 0;  // no data is available
+	int available() throws IOException {
+		if (!connected) {
+			return -1;
+		}
+		int available = writePos - readPos;
+		if (available > 0) {
+			return available;
+		}
+		if (module.available() > 0) {
+			module.read(module.buf,new String[] { Module.OK });
+		}
+		return writePos - readPos;
 	}
 
 	void flush() {
 		// No flush implementation, unclear if necessary.
 	}
 
-	int peek() {
-	//  while ((bufsiz <= 0) || (bufsiz == _rx_buf_idx)) {
-//	    cc3k_int_poll();
-//	    // buffer in some more data
-//	    bufsiz = recv(id, _rx_buf, sizeof(_rx_buf), 0);
-//	    if (bufsiz == -57) {
-//	      close();
-//	      return 0;
-//	    }
-//	    //if (CC3KPrinter != 0) { CC3KPrinter->println("Read "); CC3KPrinter->print(bufsiz); CC3KPrinter->println(" bytes"); }
-//	    _rx_buf_idx = 0;
-	//  }
-	//  uint8_t ret = _rx_buf[_rx_buf_idx];
-	//
-	//  //if (CC3KPrinter != 0) { CC3KPrinter->print("("); CC3KPrinter->write(ret); CC3KPrinter->print(")"); }
-	//  return ret;
-		return 0;
+	int peek() throws IOException {
+		if (!connected) {
+			return -1;
+		}
+		return buffer[readPos];
 	}
 
+	public void setConnected(boolean connected) {
+		this.connected = connected;
+	}
+
+	int allocateBuffer(int size) {
+		if (writePos - readPos <= 0) {
+			this.writePos = 0;
+			this.readPos = 0;
+		}
+		if (size < BUFFER_SIZE - writePos) {
+			return size;
+		}
+		return BUFFER_SIZE - writePos;
+	}
+
+	public void addToBuffer(int b) {
+		buffer[writePos++] = b;
+	}
 
 }
