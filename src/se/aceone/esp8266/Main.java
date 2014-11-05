@@ -27,6 +27,7 @@ public class Main {
 				// SerialPort.FLOWCONTROL_XONXOFF_OUT);
 				// (int baudRate, int dataBits, int stopBits, int parity)
 				port.setSerialPortParams(115200, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+//				port.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 				Module module = new Module();
 				if (!module.begin(port)) {
 					System.out.println("Failed to start module.");
@@ -39,13 +40,14 @@ public class Main {
 				}
 				module.checkConnected();
 				System.out.println("Module reset.");
-				int[] version = new int[4];
+				int[] version = new int[5];
 				if (!module.version(version)) {
 					System.out.println("No module version.");
 				} else {
-					System.out.println("Version: " + version[0] + "." + version[1] + " " + version[2] + "." + version[3]);
+					System.out.println("Version: " + version[0] + "." + version[1] + " " + version[2] + "." + version[3]+ "." + version[4]);
 				}
 				// module.query(Module.AT_CIPMUX);
+				module.getListAPs();
 				if (!module.connectToAP("C64", "feelgood", 5)) {
 					System.out.println("Failed connect to AP.");
 					return;
@@ -57,11 +59,9 @@ public class Main {
 				if (!module.getIPAddress(ip)) {
 				}
 				System.out.println("Got ip: " + ip[0] + "." + ip[1] + "." + ip[2] + "." + ip[3]);
-				// module.getListAPs();
 				// module.query(Module.AT_CWJAP);
 				// module.connectTCP("220.181.111.85", 80);
-				// String destIP = "aceone.se";
-				String destIP = "baidu.com";
+				String destIP = "hackaday.com";
 				Client client = module.connectTCP(destIP, 80);
 				String cmd = "GET /status HTTP/1.0\r\nHost: ";
 				cmd += destIP;
