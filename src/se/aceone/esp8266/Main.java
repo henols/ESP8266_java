@@ -47,8 +47,8 @@ public class Main {
 					System.out.println("Version: " + version[0] + "." + version[1] + " " + version[2] + "." + version[3]+ "." + version[4]);
 				}
 				// module.query(Module.AT_CIPMUX);
-				module.getListAPs();
-				if (!module.connectToAP("C64", "feelgood", 5)) {
+//				module.getListAPs();
+				if (!module.connectToAP("C64", "feelgood")) {
 					System.out.println("Failed connect to AP.");
 					return;
 				}
@@ -57,11 +57,14 @@ public class Main {
 				module.checkConnected();
 				int[] ip = new int[4];
 				if (!module.getIPAddress(ip)) {
+					System.out.println("Failed to get IP.");
+					return;
 				}
 				System.out.println("Got ip: " + ip[0] + "." + ip[1] + "." + ip[2] + "." + ip[3]);
 				// module.query(Module.AT_CWJAP);
 				// module.connectTCP("220.181.111.85", 80);
-				String destIP = "hackaday.com";
+//				String destIP = "hackaday.com";
+				String destIP = "aceone.se";
 				Client client = module.connectTCP(destIP, 80);
 				String cmd = "GET /status HTTP/1.0\r\nHost: ";
 				cmd += destIP;

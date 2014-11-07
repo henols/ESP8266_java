@@ -44,13 +44,13 @@ public class Client {
 		}
 		// return write(buf, len, 0);
 
-		module.write(AT_CIPSEND + "=" + id + "," + (len+1));
+		module.write(AT_CIPSEND + "=" + id + "," + (len));
 		int s = module.read(module.buf, new String[] { SEND_DATA });
 		System.out.println("---------- "+s);
 		module.debugPrint(buf, s);
 		module.write(new String(buf, 0, len));
 		s = module.read(module.buf, new String[] { SEND_OK });
-		System.out.println(s);
+		System.out.print(s);
 		return len;
 	}
 
@@ -99,7 +99,9 @@ public class Client {
 			return available;
 		}
 		if (module.available() > 0) {
-			module.read(module.buf,new String[] { Module.OK });
+			int read = module.read(module.buf,new String[] { Module.OK });
+			System.out.println("read: "+read);
+			System.out.println(new String(module.buf,0,read));
 		}
 		return writePos - readPos;
 	}

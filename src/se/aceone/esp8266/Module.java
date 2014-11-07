@@ -25,23 +25,24 @@ public class Module {
 	private PrintWriter output;
 	private BufferedInputStream input;
 
-	private final static int TIME_OUT = 10000;
+	private final static int TIME_OUT = 15000;
 
 	private static final String BUSY = "busy";
 	private static final String ERROR = "ERROR";
 	private static final String ERROR_1 = "error";
-//	private static final String[] ERRORS = {  ERROR, BUSY, ERROR_1 };
-	private static final String[] ERRORS = {  ERROR,  ERROR_1 };
+	private static final String FAIL = "Fail";
+	// private static final String[] ERRORS = { ERROR, BUSY, ERROR_1 };
+	private static final String[] ERRORS = { ERROR, ERROR_1, FAIL };
 
 	static final String READY_1 = "ready";
 	static final String READY_2 = "Ready";
-	static final String READY[] = {READY_1, READY_2};
+	static final String READY[] = { READY_1, READY_2 };
 	static final String OK = "OK";
 	static final String ALREAY_CONNECT = "ALREAY CONNECT";
 	static final String LINKED = "Linked";
 	static final String NO_CHANGE = "no change";
 
-//	static final String[] GOOD = { OK, READY };
+	// static final String[] GOOD = { OK, READY };
 
 	char[] buf = new char[128];
 
@@ -94,9 +95,9 @@ public class Module {
 		int s = 0;
 		int[] found = new int[1];
 		while (found[0] == 0) {
-			int ss = read(buf,  READY , found);
+			int ss = read(buf, READY, found);
 			System.out.println("Size: " + ss);
-			if(ss >0){
+			if (ss > 0) {
 				System.out.println(new String(buf, 0, ss));
 			}
 			s += ss;
@@ -178,11 +179,12 @@ public class Module {
 	void getListAPs() throws IOException {
 		write(AT_CWLAP);
 		int[] found = new int[1];
-		while(found[0]==0){
-		int pos = read(buf, new String[] { OK }, found);
-		debugPrint(buf, pos);
+		while (found[0] == 0) {
+			int pos = read(buf, new String[] { OK }, found);
+			debugPrint(buf, pos);
 		}
-		System.out.println();;
+		System.out.println();
+		;
 	}
 
 	boolean getIPAddress(int[] ip) throws IOException {
@@ -196,19 +198,25 @@ public class Module {
 		}
 		int ind = indexOf(buf, s, AT_CIFSR) + 11;
 
-		for (int i = 0; i < 4; i++) {
-			int lastInd = indexOf(buf, s, ".", ind);
-			if (lastInd < 0) {
-				lastInd = s - 8;
+		try {
+			for (int i = 0; i < 4; i++) {
+				int lastInd = indexOf(buf, s, ".", ind);
+				if (lastInd < 0) {
+					lastInd = s - 8;
+				}
+				// strtol(buf[ind],buf[LastInd],10);
+				ip[i] = Integer.parseInt(new String(buf, ind, lastInd - ind));
+				ind = lastInd + 1;
 			}
-			// strtol(buf[ind],buf[LastInd],10);
-			ip[i] = Integer.parseInt(new String(buf, ind, lastInd - ind));
-			ind = lastInd + 1;
+			return true;
+		} catch (Exception e) {
+			System.out.println("Bad ip: " + ip[0] + "." + ip[1] + "." + ip[2] + "." + ip[3]);
+			System.out.println(buf);
+			return false;
 		}
-		return true;
 	}
 
-	boolean connectToAP(String ssid, String key, int attempts) throws Exception {
+	boolean connectToAP(String ssid, String key) throws Exception {
 		if (!initialised) {
 			return false;
 		}
@@ -260,7 +268,7 @@ public class Module {
 		while (true) {
 			int s = read(buf, new String[] { OK, "+CIPSTATUS:" });
 			if (endsWith(buf, s, "+CIPSTATUS:")) {
-				con[input.read() - '0' -1] = true;
+				con[input.read() - '0' - 1] = true;
 			} else {
 				break;
 			}
@@ -325,13 +333,14 @@ public class Module {
 
 		while (timeOut > System.currentTimeMillis()) {
 			while (input.available() > 0) {
-				if(bufferToSmal){
-					if(readToClientBuffer()){
-						found[0]=0;
+				if (bufferToSmal) {
+					if (readToClientBuffer()) {
+						found[0] = 0;
 						return 0;
-					};
+					}
+					;
 				}
-				
+
 				res[pos++] = (char) input.read();
 				if (endsWith(res, pos, "+IPD,") && input.available() > 3) {
 					clientId = ((char) input.read()) - '0' - 1;
@@ -342,10 +351,11 @@ public class Module {
 						remainingSize *= 10;
 						remainingSize += (c - '0');
 					}
-					if(readToClientBuffer()){
-						found[0]=0;
+					if (readToClientBuffer()) {
+						found[0] = 0;
 						return pos;
-					};
+					}
+					;
 				}
 				if (endsWith(res, pos, ERRORS)) {
 					debugPrintln(res, pos);
@@ -373,7 +383,7 @@ public class Module {
 	boolean readToClientBuffer() throws IOException {
 		System.out.println();
 		System.out.println("=========================");
-		System.out.println("remainingSize: "+remainingSize);
+		System.out.println("remainingSize: " + remainingSize);
 		System.out.println("=========================");
 		int bufSize = clients[clientId].allocateBuffer(remainingSize);
 		bufferToSmal = bufSize < remainingSize;
@@ -407,7 +417,7 @@ public class Module {
 	public void query(String cmd) throws IOException {
 		write(cmd + '?');
 		int ind = read(buf, new String[] { OK });
-		debugPrintln(buf,ind);
+		debugPrintln(buf, ind);
 	}
 
 	public int available() throws IOException {
